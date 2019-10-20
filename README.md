@@ -50,8 +50,16 @@ After a while, your environment will look like this
 
 #### The Problem
 
-- Time consumming when setup a new stack
-- Environment conflict between stacks (not isolated)
+**in brief**
+Multiple apps shared same OS environment and it's hard to change/install new env and/or new app
+
+**in full**
+- Time consuming when setup a new stack
+
+- Environment conflict between stacks (not isolated) 
+  eg nodejs installed and broken by upgrading other stuff
+  by `not isolated` it means not isolated stacks aka. stacks shared same dependencies
+  
 - Missing dependencies
 - Hard to upgrade (code + environment)
 - Hard to replicate to another machine
@@ -60,7 +68,7 @@ After a while, your environment will look like this
 #### Introduction to Docker
 
 - Docker was introduced in 2013
-- For easier to understand, Docker is similar to VM but dont consume as much computing resources
+- For easier to understand, Docker is **similar to VM but dont consume as much computing resources**
 - Docker allow application run in an isolated environment
 - Docker provide an easy way to install and share your application
 
@@ -75,12 +83,17 @@ After a while, your environment will look like this
 ##### Practice
 
 - Running a Docker container
-```sh
+```bash
 # Run a container
-docker run -d --name mongo mongo
+docker run -d                            --name mongo        mongo
+           # run as background daemon    # container name    # image name at hub.docker.com/_/mongo
 
 # List running containers
 docker ps
+sample_output='
+CONTAINER ID        IMAGE    COMMAND                  CREATED             STATUS              PORTS                                                                                         NAMES
+fb93ea67f4f1        mongo    "docker-entrypoint.s…"   4 minutes ago       Up 4 minutes        27017/tcp
+'
 
 # View logs of a container
 docker logs mongo
@@ -90,6 +103,10 @@ docker stop mongo
 
 # Remove a container
 docker rm mongo
+
+# View cpu/memory consumed
+docker stats  # similar to htop
+
 ```
 
 ##### Docker-compose
@@ -106,7 +123,7 @@ services:
 ```
 
 - Running:
-```sh
+```bash
 # Running a single service
 docker-compose up -d mongo
 
@@ -127,26 +144,41 @@ docker-compose up -d
 ![](resources/isolated_env.png)
 
 - Docker provide 2 method for communicate between Docker environment and host OS
-  - Port Mapping: For network commnication
+  - Port Mapping: For network communication
   - Volume Mount: For file system communication
 
 ![](resources/env_communication.png)
 
+
+#### Advice
 - Should limit 1 service/app per container, avoid adding multiple services into 1
-- Docker have its own mechanism for process monitoring and restart, so better avoid things like `supervisord`, `pm2`, ...
+  i.e. Docker auto-restart a crashed container --> 1app-1container will help keeping all app alive
+
+- Docker have its own mechanism for process monitoring and restart, so better avoid adding to the container monitor-things like `supervisord`, `pm2`, ...
 
 ##### Practice
-```sh
+```bash
 docker run -d --name mongo -p 27017:27017 -v ./data/mongo:/data/db mongo
 ```
 
 #### Containerize your application
 
 - Creating `Dockerfile` and `.dockerignore`
+
 - Running `docker build -t {image_name}:{image tag} .`
-- Docker image is stored as multiple layer
-  - Docker will reuse old layer if command or content does not change
-  - Reuse layer for faster docker build process
+
+- `Docker image` is stored as multiple `layer`
+  
+  + Docker will **reuse** old layer if command or content does not change
+  e.g. 
+  `FROM node:alpine` will be stored as a layer and reused whenever image node:alpine is required
+  and this `FROM` command marked with `---> Using cache`
+  
+  + layer for `COPY` command is considered new layer if file content is new
+  + layer for `RUN`  command is considered new layer if command call's whole text is new
+  
+- Reuse layer for **faster docker build process**
+  + carefully order your dockerfile commands so that maximize the number of reused layers will give you the fastest image build time
 
 #### Summary
 

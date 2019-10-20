@@ -57,3 +57,9 @@ typings/
 # dotenv environment variables file
 .env
 data
+
+# from namgivu
+.idea/
+
+# mapped volume for mongo container
+data/mongo/
